@@ -1,0 +1,141 @@
+---
+title: "Data Mining Asssigment 2"
+author: "Rajendra R Prasad"
+date: "05/11/2019"
+output:
+  html_document: default
+  pdf_document: default
+---
+```{r}
+Data = read.csv("C:/Users/rajendra/Desktop/AppStore.csv",sep = ",", na.strings=c("","NA"))
+onehot.encoded.Data = read.csv("C:/Users/rajendra/Desktop/AppStore1.csv",sep = ",")
+
+summary(Data)
+```
+##Using Original.Release.Date and Current.Version.Release.Date to calculate how old application is 
+
+```{r}
+D = as.Date(as.character(Data$Current.Version.Release.Date), format = "%d/%m/%Y")-
+  as.Date(as.character(Data$Original.Release.Date), format = "%d/%m/%Y")
+Years = D/365
+Data$Years = Years
+Data$Years = as.numeric(gsub("\\days", "", Data$Years))
+```
+## Missin Value imputation
+
+```{r}
+Missing.Data = Data[,-c(1,2,6,8,9,10,11,12,13)]
+library(mice)
+model <- mice(Missing.Data, m=3, seed=500)
+FData <-complete(model, 1)
+OData = cbind(Data[,c(1,2,6,8,9,10,11,12,13)], FData)
+OData = na.omit(OData)
+summary(OData)
+dim(OData)
+```
+## Q.1 Create some sort of Popularity Index and rank the apps as per their popularity.
+Clearly mention the variables that you have used and explain your reasoning behind
+the choice of variables and the choice of the index (formula for the index).
+
+Ans :  Applications popularity depends on User rating and number of peoples using its Therefore to define Popularity of an application we required to these to variable.
+
+Popularity  = (user average rating) + (Number of Users rated)/(maxmimum number of                             people rated of any application)*5
+
+Since total number of users rated for  each application differ and in some cases this difference is large hence we have converted into range of 5.
+Hence popilarity will define in range of 0-10.
+
+```{r}
+max_rated  = max(OData$User.Rating.Count)
+
+Popularity = OData$Average.User.Rating + (OData$User.Rating.Count/max_rated)*5
+
+OData$Popularity = Popularity
+```
+
+
+## 2. If an app that I like turns out to be a paid app, how can I locate a similar free
+app? Write a program which provides me a free substitute (may not be an exact
+replacement but something similar) for any paid app. Clearly mention the variables
+that you have used and explain your reasoning behind the choice of variables. 
+
+Ans : Here varibles we have used Average.User.Rating, Age.Rating and Primary.Genre of the application. Here Primary.Genre and Age.Rating is important to recommend other simalar application because if genre changes purpose of application changes and Age.rating is important because the application uses depends on age group if we consider any Game then easy type of games are famous in younger ages while puzzel types games are famouse in teenager groups. Average.User.Rating is important because there is high possibility that the most popular game will be loved.
+
+```{r}
+colnames(OData)
+data = which(OData$Price==0)
+CData = OData[data,]
+Genere = as.factor(CData$Genres)
+Paid_app = OData[data,]
+Unpaid_app = OData[-data,c(1,6,13,10)]
+colnames(Unpaid_app)
+summary(Unpaid_app)
+colnames(Unpaid_app)
+
+
+Dist= c()
+fun<- function(Sdata, MData){
+  for(i in 1:nrow(Unpaid_app)){
+    dist = 0;
+    for(j in 1:ncol(Sdata)){
+      if(as.character(MData[i,j]) == as.character(Sdata[1,j])){
+        dist = dist + 1;
+      }else{
+        dist = dist + 0;
+      }
+    }
+    Dist = append(Dist, dist)
+  }
+  MData$Dist = Dist;
+  GD = MData[order(-MData$Dist), ]
+  print(dim(GD))
+  if(GD[1,]$Dist == 3){
+    print(GD[1,])
+  }else{
+      gen = 0;
+    for(k in 1:3){
+        if(as.character(MData[k,2]) == as.character(Sdata[1,2])){
+          gen = gen + 1;
+          t=k;
+        }
+    }
+    if(gen>1){
+      print(GD[t,])
+    }
+  }
+}
+
+
+TD = fun(Unpaid_app[6, ], Unpaid_app)
+print(Unpaid_app[6, ])
+
+```
+
+#Rank the genres (using both the genre related columns) as per their popularity in
+18+ age group. Explain how you use the app popularity to determine the genre
+popularity.
+
+Ans : From summery of the data of 17+ age rating Game is more pupular Genre then Sports, entertainment, Education, Reference, Books are popular in primary Genere.
+
+```{r}
+index = which(as.character(OData$Age.Rating)=='17+')
+LData = OData[index,]
+dim(LData)
+summary(LData)
+```
+
+# Using the given data, report one most interesting finding (i.e., frame your own question and answer it) other than those used in the earlier questions.
+
+Ans:
+
+```{r}
+
+plot(OData$Popularity, OData$Price)
+
+# There are some applications which are veri Popular though there price is high.
+colnames(OData)
+PData = OData[,c(5,10,11,12,13,14,15)]
+PData$Age.Rating = as.numeric(gsub("\\+", "", PData$Age.Rating))
+
+library("PerformanceAnalytics")
+chart.Correlation(PData, histogram=TRUE, pch=19)
+```
