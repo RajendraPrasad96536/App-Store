@@ -1,8 +1,8 @@
 
-# Application Ranking
+# Application Ranking.
 
 ##Task Description: 
-###Characteristics of various apps are provided in the file ‘AppStore’. 
+##Characteristics of various apps are provided in the file ‘AppStore’. 
 
 ######To Create some sort of Popularity Index and rank the apps as per their popularity.
 
