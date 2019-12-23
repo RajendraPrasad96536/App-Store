@@ -4,6 +4,11 @@
 Task Description: 
 Characteristics of various apps are provided in the file ‘AppStore’. 
 
+
+
+
+
+
 ######To Create some sort of Popularity Index and rank the apps as per their popularity.
 
 ###### If an app that I like turns out to be a paid app, how can I locate a similar free
